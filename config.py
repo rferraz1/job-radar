@@ -4,96 +4,96 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Cargo forte: título que só existe mesmo em vaga de dados/BI, sem
-# possibilidade real de ser outra área.
+# Adaptado do perfil original (Dados/BI) pro perfil do Rodolfo: dev
+# júnior/estágio/trainee, sem exigência de senioridade alta. Cargo forte:
+# título que já declara júnior/estágio/trainee no próprio nome, sem
+# possibilidade real de ser vaga sênior/pleno.
 KEYWORDS_CARGO_FORTE = [
-    "Analista de Dados",
-    "Analista BI",
-    "Analista de BI",
-    "Business Intelligence",
-    "Data Analytics",
-    "Analista de Analytics",
-    "Data Analyst",
-    "Desenvolvedor BI",
-    "Consultor BI",
-    "Analista de Inteligência de Negócios",
-    "BI Developer",
-    "BI Analyst",
-    "Analista de Reporting",
-    "Analista de Inteligência de Mercado",
-    "Analista de Indicadores",
-    "Reporting Analyst",
-    "Insights Analyst",
-    "Data Insights Analyst",
-    "MIS Analyst",
-    "Analista de MIS",
-    "Assistente de BI",
-    "Auxiliar de BI",
-    "Analista de Inteligência Comercial",
-    "Data Specialist",
-    "Data Quality Analyst",
-    "Data Intelligence Analyst",
-    "BI & Analytics Analyst",
-    "Analytics Specialist",
-    "Especialista em Dados",
-    "Analista de Planejamento e Dados",
-    # "Datos" (espanhol) não é "Dados" (português) — nenhuma keyword em
-    # português cobre título em espanhol, mesmo sendo a mesma vaga. Faz
-    # sentido aqui no pipeline BR (não só em config_intl.py) porque
-    # LinkedInScraper já busca em Argentina/Chile (ver LOCATIONS_LINKEDIN).
-    "Analista de Datos",
-    "Analítica de Datos",
+    "Desenvolvedor Júnior",
+    "Desenvolvedora Júnior",
+    "Programador Júnior",
+    "Programadora Júnior",
+    "Junior Developer",
+    "Junior Software Engineer",
+    "Software Engineer Intern",
+    "Software Developer Intern",
+    "Estagiário de TI",
+    "Estagiária de TI",
+    "Estágio em Tecnologia",
+    "Estágio em Tecnologia da Informação",
+    "Estágio em Desenvolvimento",
+    "Estágio de Desenvolvimento",
+    "Estágio em Programação",
+    "Trainee de Tecnologia",
+    "Trainee de Desenvolvimento",
+    "Trainee Developer",
+    "Analista de Suporte Júnior",
+    "Técnico de Suporte Júnior",
+    "Suporte Técnico Júnior",
+    "Assistente de TI",
 ]
 
-# Cargo ambíguo: título que também é usado em vaga sem nada a ver com
-# dados/BI (ex: "Business Analyst" e "Analista de Negócios" existem em
-# TI, finanças, RH, operações... qualquer área). Só conta como match se o
-# título TAMBÉM tiver um QUALIFICADORES_DADOS junto — é o que permite ir
-# adicionando cargo adjacente (Product Analyst, CRM Analyst, Marketing
-# Analyst etc.) sem cada um virar fonte de ruído sozinho.
+# Cargo ambíguo: título que também é usado em vaga de qualquer senioridade
+# (ex: "Desenvolvedor" sozinho existe de júnior a sênior). Só conta como
+# match se o título TAMBÉM tiver um QUALIFICADORES_JUNIOR junto — é o que
+# permite ir adicionando cargo adjacente (Analista de Sistemas, Suporte
+# Técnico) sem cada um virar fonte de ruído sozinho.
 KEYWORDS_CARGO_AMBIGUO = [
-    "Business Analyst",
-    "Analista de Negócios",
-    "Business Analytics",
-    "Analista de Performance",
+    "Desenvolvedor",
+    "Desenvolvedora",
+    "Programador",
+    "Programadora",
+    "Developer",
+    "Software Engineer",
+    "Analista de Sistemas",
+    "Analista de TI",
+    "Suporte Técnico",
+    "Analista de Suporte",
+    "Estagiário",
+    "Estagiária",
+    "Trainee",
 ]
 
 # Termo que precisa aparecer junto no título quando o cargo é ambíguo, pra
-# confirmar que é vaga de dados/BI e não de outra área qualquer.
+# confirmar que é vaga júnior/estágio/trainee e não pleno/sênior.
 QUALIFICADORES_DADOS = [
-    "dados",
-    "data",
-    "bi",
-    "sql",
-    "power bi",
-    "analytics",
-    "kpi",
-    "dashboard",
-    "métricas",
-    "reporting",
-    "insights",
+    "júnior",
+    "junior",
+    "jr",
+    "trainee",
+    "estágio",
+    "estagiário",
+    "estagiária",
+    "iniciante",
+    "entry level",
+    "primeiro emprego",
 ]
 
-# Ferramenta que aparece como núcleo do título ("Analista de Power BI").
-# Só conta como match se o título TAMBÉM tiver uma palavra de cargo — é o
-# espelho da regra de KEYWORDS_CARGO_AMBIGUO: lá o cargo é ambíguo e pede
-# domínio, aqui a ferramenta é ambígua e pede cargo. Sem isso, "Power BI"
-# sozinho aprovaria "Power BI Senior" e "Desenvolvedor (Power BI + Python)",
-# que são vaga de desenvolvimento, não de análise.
+# Ferramenta/stack que aparece como núcleo do título ("Desenvolvedor React
+# Júnior"). Só conta como match se o título TAMBÉM tiver uma palavra de
+# cargo — evita que "Python" sozinho aprove qualquer vaga que só cite a
+# linguagem como diferencial.
 FERRAMENTAS_TITULO = [
-    "Power BI",
+    "Python",
+    "JavaScript",
+    "React",
+    "Node",
+    "Node.js",
+    "TypeScript",
 ]
 
-# Palavra de cargo que confirma que a vaga de ferramenta é de análise.
-# "desenvolvedor"/"developer"/"engenheiro" ficam FORA de propósito: é o que
-# mantém vaga de dev fora do radar.
+# Palavra de cargo que confirma que a vaga de ferramenta é de
+# desenvolvimento/suporte júnior.
 QUALIFICADORES_CARGO = [
-    "analista",
-    "analyst",
-    "especialista",
-    "specialist",
-    "consultor",
-    "consultant",
+    "desenvolvedor",
+    "desenvolvedora",
+    "programador",
+    "programadora",
+    "developer",
+    "estagiário",
+    "estagiária",
+    "trainee",
+    "suporte",
 ]
 
 KEYWORDS = KEYWORDS_CARGO_FORTE + KEYWORDS_CARGO_AMBIGUO
@@ -116,8 +116,8 @@ TERMOS_CARGO_EXTRA = [
     # termos mais amplos que a keyword exata, mantidos por dar rede mais
     # larga na busca (a keyword em si é mais restrita, de propósito, pra
     # não gerar falso positivo no filtro de título).
-    "power bi",
-    "inteligência de mercado",
+    "desenvolvedor junior",
+    "programador junior",
 ]
 
 TERMOS_CARGO = sorted(set(k.lower() for k in KEYWORDS) | set(TERMOS_CARGO_EXTRA))
@@ -133,12 +133,12 @@ TERMOS_CARGO = sorted(set(k.lower() for k in KEYWORDS) | set(TERMOS_CARGO_EXTRA)
 # confirma o padrão relatado. Removidos por render zero e custarem sessão
 # igual a um termo de cargo.
 TERMOS_FERRAMENTA = [
-    "sql",
     "python",
-    "tableau",
-    "qlik",
-    "looker",
-    "bigquery",
+    "javascript",
+    "react",
+    "node",
+    "typescript",
+    "sql",
 ]
 
 TERMOS_BUSCA = TERMOS_CARGO + TERMOS_FERRAMENTA
@@ -155,18 +155,11 @@ TERMOS_BUSCA = TERMOS_CARGO + TERMOS_FERRAMENTA
 TERMOS_POR_CICLO = 10
 
 CIDADES = [
+    # Só "Remoto" de propósito: Rodolfo quer 100% home office (regra
+    # explícita, não critério a reconsiderar) — cidade presencial/híbrida
+    # fica fora, diferente do perfil original (que aceitava presencial na
+    # região do autor).
     "Remoto",
-    "Campina Grande",
-    "João Pessoa",
-    "Recife",
-    "Natal",
-    "Maceió",
-    "Jaboatão",
-    "Aracaju",
-    "Teresina",
-    "São Luís",
-    "Petrolina",
-    "Caruaru",
 ]
 
 # MEDIDO: "Data Analyst @ Lisboa" e "Analista de Datos @ Madrid" reprovavam
@@ -224,7 +217,7 @@ LOCATIONS_LINKEDIN = ["Brasil"]
 # (LOCATIONS_INTL) — evita arriscar nome de país nunca testado (grafia
 # errada ou região que o LinkedIn não resolve como location de verdade,
 # como já visto com "LATAM"/"Latin America").
-LOCATIONS_LINKEDIN_REMOTO_APENAS = ["Argentina", "Chile", "México", "Colômbia", "Espanha", "Portugal"]
+LOCATIONS_LINKEDIN_REMOTO_APENAS = []  # Rodolfo não quer mercado fora do Brasil por ora — corta a passada extra
 
 # Mercado que a vaga remota precisa aceitar pra contar, quando o texto de
 # local DECLARA um escopo geográfico ("Remote — US only", "Remote — India").
@@ -246,7 +239,7 @@ LOCATIONS_LINKEDIN_REMOTO_APENAS = ["Argentina", "Chile", "México", "Colômbia"
 # quando o texto disser isso literalmente (guarda-chuva de verdade, não
 # substituto de nome de país). Portugal e Espanha entraram nominalmente
 # pelo mesmo motivo, desde antes.
-MERCADOS_REMOTO_ACEITOS = ["Brasil", "LATAM", "Argentina", "Chile", "México", "Colômbia", "Portugal", "Espanha"]
+MERCADOS_REMOTO_ACEITOS = ["Brasil"]
 
 INTERVALO_MINUTOS = int(os.getenv("INTERVALO_MINUTOS", 180))
 

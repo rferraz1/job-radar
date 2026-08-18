@@ -39,16 +39,15 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
-      - name: Rodar JobRadar (um ciclo de cada perfil)
+      - name: Rodar JobRadar (perfil Brasil, adaptado pro Rodolfo)
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        # Antes disso só o perfil Brasil rodava aqui — main_intl.py existia
-        # no repositório mas nunca foi chamado pelo workflow, então o
-        # pipeline internacional nunca rodou de verdade em produção. Agora é
-        # um projeto só com dois perfis selecionáveis (ver perfis.py); os
-        # dois rodam na mesma execução/commit, um após o outro.
-        run: python main.py --perfil brasil internacional --once
+        # Fork de teste: só perfil Brasil. config_intl.py continua com as
+        # keywords originais de Dados/BI (não adaptadas), então rodar
+        # "internacional" aqui traria resultado errado pro perfil do
+        # Rodolfo (dev júnior/estágio, sem inglês).
+        run: python main.py --perfil brasil --once
 
       - name: Salvar vagas já vistas (evita notificação duplicada)
         run: |

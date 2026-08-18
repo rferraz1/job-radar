@@ -149,17 +149,17 @@ CASOS_COMBINA_COM = [
     # país hispanofalante já é o próprio sinal.
     ("mercado-confirmado-dispensa-idioma-no-titulo", "Senior Data Analyst", "Remote - Espanha", "Remoto", PERFIL_INTL, True),
 
-    # Perfil Brasil: cargo e cidade são checados em campos separados
-    # (título vs. local) — cidade fora da lista aceita barra mesmo com
-    # cargo batendo.
-    ("cidade-fora-da-lista-barrada", "Analista de Dados", "Nova York", "Presencial", PERFIL_BR, False),
-    ("cargo-fora-do-escopo-barrado", "Vendedor Externo", "Recife, PE", "Presencial", PERFIL_BR, False),
-    ("cargo-forte-cidade-aceita-passa", "Analista de Dados Pleno", "Recife, PE", "Presencial", PERFIL_BR, True),
-    # keywords_ambiguo (ex: "Business Analyst") só conta com qualificador
-    # de dados junto no título — sozinho é ruído de outra área (RH,
-    # finanças).
-    ("cargo-ambiguo-sem-qualificador-barrado", "Business Analyst", "Recife, PE", "Presencial", PERFIL_BR, False),
-    ("cargo-ambiguo-com-qualificador-passa", "Business Analyst com SQL", "Recife, PE", "Presencial", PERFIL_BR, True),
+    # Perfil Brasil (adaptado pro Rodolfo: dev júnior/estágio/trainee, só
+    # Remoto): cargo e cidade são checados em campos separados (título vs.
+    # local) — cidade fora da lista aceita barra mesmo com cargo batendo.
+    ("cidade-fora-da-lista-barrada", "Desenvolvedor Júnior", "Nova York", "Presencial", PERFIL_BR, False),
+    ("cargo-fora-do-escopo-barrado", "Vendedor Externo", "Remoto", "Remoto", PERFIL_BR, False),
+    ("cargo-forte-cidade-aceita-passa", "Desenvolvedor Júnior", "Remoto", "Remoto", PERFIL_BR, True),
+    # keywords_ambiguo (ex: "Programador") só conta com qualificador de
+    # júnior/estágio/trainee junto no título — sozinho é ruído de vaga
+    # pleno/sênior.
+    ("cargo-ambiguo-sem-qualificador-barrado", "Programador", "Remoto", "Remoto", PERFIL_BR, False),
+    ("cargo-ambiguo-com-qualificador-passa", "Programador Trainee", "Remoto", "Remoto", PERFIL_BR, True),
 ]
 
 
