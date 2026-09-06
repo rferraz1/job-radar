@@ -11,10 +11,10 @@ _MODELO = "gemini-2.5-flash"
 
 def _extrair_json(texto: str) -> dict:
     texto = texto.strip()
-    m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", texto, re.DOTALL)
-    candidato = m.group(1) if m else texto
+    m = re.search(r"```(?:json)?\s*(.*?)\s*```", texto, re.DOTALL)
+    candidato = m.group(1).strip() if m else texto
     inicio, fim = candidato.find("{"), candidato.rfind("}")
-    if inicio == -1 or fim == -1:
+    if inicio == -1 or fim == -1 or fim < inicio:
         raise ValueError("sem objeto JSON no texto")
     return json.loads(candidato[inicio:fim + 1])
 
