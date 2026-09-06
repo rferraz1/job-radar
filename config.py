@@ -205,7 +205,15 @@ ATIVAR_EIXO_IBERICO_BR = False
 #
 # Mercado "casa": busca modalidade completa (presencial/híbrida + remoto),
 # porque o usuário mora aqui e vaga local de verdade interessa.
-LOCATIONS_LINKEDIN = ["Brasil"]
+#
+# MEDIDO 06/09: tem que ser "Brazil" (inglês). O endpoint guest do LinkedIn
+# NÃO resolve "Brasil" (português) como location — em vez de erro, ele cai
+# num fallback global que devolve vaga majoritariamente dos EUA
+# ("Manassas, VA", "Austin, TX"...). Era a causa de LinkedIn trazer ~500
+# vagas brutas e 0 passarem o filtro (todas estrangeiras, barradas por
+# mercado/cidade). Com "Brazil" o endpoint devolve "São Paulo, São Paulo,
+# Brazil" etc. como esperado.
+LOCATIONS_LINKEDIN = ["Brazil"]
 
 # Mercados adicionais: só busca REMOTA (f_WT=2) — vaga presencial/híbrida
 # num país onde o usuário não mora não serve, então nem faz sentido gastar
