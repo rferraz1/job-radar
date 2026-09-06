@@ -138,6 +138,23 @@ def _garantir_coluna_feedback(conn):
         conn.execute("ALTER TABLE vagas_vistas ADD COLUMN feedback TEXT")
 
 
+def _garantir_colunas_analise(conn):
+    """Migração leve pra Fase 3 (enriquecimento por IA): guarda o resultado
+    da análise de compatibilidade currículo x vaga junto da linha da vaga.
+    `compat_score` (0-100) fica desnormalizado numa coluna própria porque o
+    digest ordena por ele (COALESCE(compat_score, relevancia*10) DESC, ver
+    obter_vagas_pendentes_digest) — extrair de dentro do JSON em todo SELECT
+    não daria. `analise_json` guarda o objeto Analysis inteiro (ver
+    enrich.models.Analysis.to_json) pra render detalhe depois sem re-chamar
+    a IA. Ambas NULL em linha antiga e em vaga salva sem análise — estado
+    real ("não analisada"), não buraco de migração, então sem backfill."""
+    colunas = [linha[1] for linha in conn.execute("PRAGMA table_info(vagas_vistas)")]
+    if "compat_score" not in colunas:
+        conn.execute("ALTER TABLE vagas_vistas ADD COLUMN compat_score INTEGER")
+    if "analise_json" not in colunas:
+        conn.execute("ALTER TABLE vagas_vistas ADD COLUMN analise_json TEXT")
+
+
 class BancoVazioSuspeito(RuntimeError):
     """jobs.db já existia em disco (tinha conteúdo) mas a tabela veio vazia
     depois de iniciar_db() — não é primeiro uso, é banco perdido/corrompido/
@@ -168,6 +185,7 @@ def iniciar_db():
         _garantir_colunas_digest(conn)
         _garantir_coluna_situacao(conn)
         _garantir_coluna_feedback(conn)
+        _garantir_colunas_analise(conn)
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_vagas_digest_pendente "
             "ON vagas_vistas (perfil, digest_pendente)"
@@ -235,26 +253,35 @@ def definir_metadado(chave: str, valor: str):
         )
 
 
-def salvar_vaga(job, perfil_chave: str = "", digest_pendente: bool = False, exploratoria: bool = False):
+def salvar_vaga(job, perfil_chave: str = "", digest_pendente: bool = False,
+                exploratoria: bool = False, analise=None):
     """`digest_pendente=True` marca a vaga como ainda não notificada —
     entrou na fila do digest diário (ver _enviar_digest_diario em main.py)
     em vez de mandar mensagem individual na hora, porque a relevância ficou
     abaixo do limiar. `perfil_chave` é o que permite o digest buscar só as
     pendentes DESSE perfil (ver obter_vagas_pendentes_digest) — sem isso,
     rodar brasil+internacional na mesma execução misturaria a fila dos
-    dois."""
+    dois.
+
+    `analise` (enrich.models.Analysis ou None): quando presente, grava
+    `compat_score` e `analise_json` na mesma inserção — None deixa as duas
+    colunas NULL ("vaga não analisada", ver _garantir_colunas_analise)."""
+    compat_score = analise.compat_score if analise is not None else None
+    analise_json = analise.to_json() if analise is not None else None
     with _conectar() as conn:
         conn.execute(
             """
             INSERT OR IGNORE INTO vagas_vistas
                 (id, titulo, empresa, local, link, site, chave_secundaria, publicado_em,
-                 modalidade, relevancia, perfil, digest_pendente, exploratoria, situacao)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 modalidade, relevancia, perfil, digest_pendente, exploratoria, situacao,
+                 compat_score, analise_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 job.id, job.titulo, job.empresa, job.local, job.link, job.site,
                 job.chave_secundaria, job.publicado_em, job.modalidade,
                 job.relevancia, perfil_chave, int(digest_pendente), int(exploratoria), "nova",
+                compat_score, analise_json,
             ),
         )
 
@@ -294,10 +321,10 @@ def obter_vagas_pendentes_digest(perfil_chave: str) -> list[tuple]:
     with _conectar() as conn:
         cursor = conn.execute(
             """
-            SELECT titulo, empresa, link, relevancia, exploratoria
+            SELECT titulo, empresa, link, relevancia, exploratoria, compat_score, analise_json
             FROM vagas_vistas
             WHERE perfil = ? AND digest_pendente = 1
-            ORDER BY relevancia DESC, encontrada_em ASC
+            ORDER BY COALESCE(compat_score, relevancia * 10) DESC, encontrada_em ASC
             """,
             (perfil_chave,),
         )

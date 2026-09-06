@@ -173,7 +173,7 @@ def montar_digest(vagas: list[tuple], rotulo_perfil: str) -> list[str]:
     linhas = [
         f'{"🧭" if exploratoria else "•"} {_linha_relevancia(relevancia or 0)} '
         f'<a href="{link}">{titulo}</a> — {empresa}'
-        for titulo, empresa, link, relevancia, exploratoria in vagas
+        for titulo, empresa, link, relevancia, exploratoria, _compat_score, _analise_json in vagas
     ]
 
     partes: list[list[str]] = []
