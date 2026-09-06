@@ -6,7 +6,12 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timezone
 
-from config import DIGEST_HORA_UTC, INTERVALO_MINUTOS, LIMIAR_DIGEST_IMEDIATO
+from config import (
+    DIGEST_HORA_UTC,
+    INTERVALO_MINUTOS,
+    LIMIAR_COMPAT_IMEDIATO,
+    LIMIAR_DIGEST_IMEDIATO,
+)
 from database.database import (
     BancoVazioSuspeito,
     definir_metadado,
@@ -26,9 +31,26 @@ from notifier.telegram import (
 )
 from perfis import FREQUENCIA_ALTA, PERFIS, Perfil
 from utils.filtro import filtrar_vagas
+from enrich.analyze import analisar_vagas
 from logger import get_logger
 
 logger = get_logger()
+
+
+def _deve_notificar_imediato(vaga) -> bool:
+    """Routing do caminho imediato (🚨) vs digest diário.
+
+    Vaga antiga (publicacao_antiga) nunca vai pro imediato — score mede
+    "bate com o que procuro", não "é recente". Com análise LLM presente, o
+    corte é o compat_score (LIMIAR_COMPAT_IMEDIATO); sem análise (provider
+    indisponível ou análise falhou), cai no fallback heurístico por
+    relevancia (LIMIAR_DIGEST_IMEDIATO) — o comportamento de hoje.
+    """
+    if vaga.publicacao_antiga:
+        return False
+    if vaga.analise is not None:
+        return vaga.analise.compat_score >= LIMIAR_COMPAT_IMEDIATO
+    return vaga.relevancia >= LIMIAR_DIGEST_IMEDIATO
 
 
 def _fontes_baixa_frequencia_ja_rodaram_hoje(perfil: Perfil) -> bool:
@@ -251,30 +273,41 @@ def ciclo_de_busca(perfil: Perfil):
 
             total_filtradas += len(vagas_filtradas) + len(vagas_secundarias)
 
-            novas_da_fonte = 0
-            for vaga in vagas_filtradas:
-                if ja_vista(vaga):
-                    continue
+            # Dedup ANTES da análise: o estágio 2 (LLM) é caro, então só
+            # roda nas vagas que passaram o filtro barato E ainda não foram
+            # vistas em ciclo anterior.
+            vagas_novas = [v for v in vagas_filtradas if not ja_vista(v)]
 
-                # Item 08: só notifica na hora quando a relevância passa do
-                # limiar (ver LIMIAR_DIGEST_IMEDIATO em config.py) — abaixo
-                # disso, vai pra fila do digest diário sem mensagem
-                # individual (ver _enviar_digest_diario). Fila é salvar com
-                # digest_pendente=True: não tem "notificação que pode
-                # falhar" nesse caminho (a mensagem só sai no digest, depois),
-                # então salvar direto não arrisca perder a vaga do jeito que
-                # salvar ANTES de notificar arriscava no caminho imediato.
+            # Estágio 2: análise profunda (busca descrição + LLM) só nas
+            # novas. Preenche vaga.analise in-place; se o provider estiver
+            # indisponível ou a análise falhar, vaga.analise fica None e o
+            # routing cai no fallback heurístico por relevancia (ver
+            # _deve_notificar_imediato).
+            analisar_vagas(vagas_novas, hint="dev")
+
+            novas_da_fonte = 0
+            for vaga in vagas_novas:
+                # Item 08: só notifica na hora quando a vaga passa o corte
+                # do caminho imediato (ver _deve_notificar_imediato) — com
+                # análise LLM é o compat_score, sem análise é a relevância
+                # heurística. Abaixo disso, vai pra fila do digest diário
+                # sem mensagem individual (ver _enviar_digest_diario). Fila
+                # é salvar com digest_pendente=True: não tem "notificação
+                # que pode falhar" nesse caminho (a mensagem só sai no
+                # digest, depois), então salvar direto não arrisca perder a
+                # vaga do jeito que salvar ANTES de notificar arriscava no
+                # caminho imediato.
                 #
                 # MEDIDO: vaga com Job.publicacao_antiga (publicado_em "há X
                 # meses/anos" — ver job.py) nunca vai pra notificação
-                # imediata, mesmo com relevância alta — score mede "bate com
+                # imediata, mesmo com score alto — score mede "bate com
                 # o que você procura", não "é recente". Site com pouco
                 # volume pra um termo deixa vaga de meses atrás na página
                 # visível (confirmado ao vivo: Sólides ordena por data, mas
                 # sem volume novo suficiente a antiga não sai da 1ª página).
                 # Não é descartada (mesma vaga ainda pode estar aberta) — só
                 # sai do caminho "🚨 urgente" e vai pro digest em lote.
-                if vaga.relevancia >= LIMIAR_DIGEST_IMEDIATO and not vaga.publicacao_antiga:
+                if _deve_notificar_imediato(vaga):
                     # Notifica ANTES de salvar. Se salvasse primeiro e o
                     # Telegram falhasse, a vaga ficava marcada como "vista"
                     # pra sempre — o próximo ciclo pulava ela em ja_vista()
@@ -286,11 +319,18 @@ def ciclo_de_busca(perfil: Perfil):
                             "como vista, tenta de novo no próximo ciclo."
                         )
                         continue
-                    salvar_vaga(vaga, perfil_chave=perfil.chave)
+                    salvar_vaga(vaga, perfil_chave=perfil.chave, analise=vaga.analise)
                     logger.info(f"[{perfil.nome}] Nova vaga: {vaga.titulo} - {vaga.empresa}")
                 else:
-                    salvar_vaga(vaga, perfil_chave=perfil.chave, digest_pendente=True)
-                    motivo_digest = "vaga antiga" if vaga.publicacao_antiga else f"relevância {vaga.relevancia}/10"
+                    salvar_vaga(
+                        vaga, perfil_chave=perfil.chave, digest_pendente=True, analise=vaga.analise
+                    )
+                    if vaga.analise is not None:
+                        motivo_digest = f"compat {vaga.analise.compat_score}%"
+                    elif vaga.publicacao_antiga:
+                        motivo_digest = "vaga antiga"
+                    else:
+                        motivo_digest = f"relevância {vaga.relevancia}/10"
                     logger.info(
                         f"[{perfil.nome}] Nova vaga (digest, {motivo_digest}): "
                         f"{vaga.titulo} - {vaga.empresa}"
