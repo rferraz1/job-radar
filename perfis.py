@@ -46,6 +46,7 @@ from config_intl import (
 from job import RegrasFiltro
 from scrapers.catho import CathoScraper
 from scrapers.geekhunter import GeekHunterScraper
+from scrapers.greenhouse import GreenhouseScraper
 from scrapers.gupy import GupyScraper
 from scrapers.indeed import IndeedScraper
 from scrapers.indeed_intl import IndeedIntlScraper
@@ -165,6 +166,7 @@ _SCRAPERS_BR = [
     DefinicaoScraper(GeekHunterScraper, FREQUENCIA_BAIXA),  # <1%
     DefinicaoScraper(Jobs99Scraper, FREQUENCIA_BAIXA),      # <1%, fonte confirmada funcionando
     DefinicaoScraper(WeWorkRemotelyIntlScraper, FREQUENCIA_BAIXA),  # nova, sem medição própria
+    DefinicaoScraper(GreenhouseScraper, FREQUENCIA_BAIXA),  # boards por empresa, descrição completa via API
 ]
 
 PERFIL_BR = Perfil(
