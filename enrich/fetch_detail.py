@@ -54,7 +54,7 @@ def buscar_descricao(job) -> tuple[str, bool]:
     try:
         html = _get_html(job.link)
         texto = _texto_limpo(html)
-        if len(texto) >= 20:
+        if len(texto) >= 200:
             return texto, True
         logger.warning(f"[fetch_detail] descrição curta demais ({len(texto)}) em {job.link} — fallback")
     except Exception as e:
