@@ -37,6 +37,21 @@ from logger import get_logger
 logger = get_logger()
 
 
+def _novas_do_ciclo(vagas_filtradas: list) -> list:
+    """Novas = ainda não vistas em ciclos anteriores (ja_vista) E não repetidas
+    dentro deste mesmo ciclo. Scraper multi-termo faz extend sem dedup, então o
+    mesmo job pode vir 2x — sem colapsar aqui, a análise LLM rodaria 2x e a
+    notificação sairia duplicada."""
+    vistos_no_ciclo: set[str] = set()
+    novas = []
+    for v in vagas_filtradas:
+        if v.id in vistos_no_ciclo or ja_vista(v):
+            continue
+        vistos_no_ciclo.add(v.id)
+        novas.append(v)
+    return novas
+
+
 def _deve_notificar_imediato(vaga) -> bool:
     """Routing do caminho imediato (🚨) vs digest diário.
 
@@ -276,7 +291,7 @@ def ciclo_de_busca(perfil: Perfil):
             # Dedup ANTES da análise: o estágio 2 (LLM) é caro, então só
             # roda nas vagas que passaram o filtro barato E ainda não foram
             # vistas em ciclo anterior.
-            vagas_novas = [v for v in vagas_filtradas if not ja_vista(v)]
+            vagas_novas = _novas_do_ciclo(vagas_filtradas)
 
             # Estágio 2: análise profunda (busca descrição + LLM) só nas
             # novas. Preenche vaga.analise in-place; se o provider estiver
