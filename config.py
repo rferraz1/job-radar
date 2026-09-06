@@ -274,4 +274,25 @@ DIGEST_HORA_UTC = 0
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
+# --- Análise profunda por LLM (estágio 2 do funil — ver docs/.../specs) ---
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+# Compatibilidade (0-100) a partir da qual a vaga vira alerta IMEDIATO.
+# Diferente de LIMIAR_DIGEST_IMEDIATO (0-10, heurístico) — este é o score do LLM.
+LIMIAR_COMPAT_IMEDIATO = int(os.getenv("LIMIAR_COMPAT_IMEDIATO", 85))
+# CV do candidato, usado como baseline pela análise. Default: checkout do
+# claude-context ao lado deste repo.
+CV_PATH = os.getenv(
+    "CV_PATH",
+    os.path.join(os.path.dirname(__file__), "..", "claude-context", "curriculo", "curriculo.html"),
+)
+# Boards públicos do Greenhouse a vigiar (slug da empresa em boards.greenhouse.io/<slug>).
+_GREENHOUSE_DEFAULT = "nubank,hotmart,loft,quintoandar,mercadolibre"
+GREENHOUSE_BOARDS = [
+    b.strip() for b in os.getenv("GREENHOUSE_BOARDS", _GREENHOUSE_DEFAULT).split(",") if b.strip()
+]
+# Depois de N falhas seguidas do LLM num ciclo (rate-limit, timeout), para de
+# chamar e deixa o resto do ciclo cair no fallback heurístico.
+ENRICH_MAX_FALHAS_LLM = int(os.getenv("ENRICH_MAX_FALHAS_LLM", 3))
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "jobs.db")
