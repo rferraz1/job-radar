@@ -805,6 +805,14 @@ class Job:
     # relevancia — "" até lá. Só pra aparecer na notificação; não
     # influencia filtro nem score.
     motivo: str = ""
+    # Descrição completa da vaga, preenchida por scrapers que já trazem
+    # (Greenhouse) ou pelo enrich/fetch_detail.py no estágio 2. "" quando
+    # não buscada ainda.
+    descricao: str = ""
+    # Resultado da análise LLM (enrich/). None = não analisada ou análise
+    # falhou (nesse caso o routing cai no fallback heurístico por relevancia).
+    # Anotação como string pra não importar enrich aqui (evita ciclo).
+    analise: "object | None" = None
 
     def __post_init__(self):
         """Sobrepõe modalidade="Remoto" quando o TÍTULO contradiz (Híbrido/
