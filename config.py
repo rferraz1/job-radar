@@ -135,15 +135,12 @@ KEYWORDS_CARGO_AMBIGUO += [
     "DevSecOps",
 ]
 
-QUALIFICADORES_CARGO += [
-    "devops",
-    "cloud",
-    "sre",
-    "plataforma",
-    "platform",
-    "devsecops",
-]
-
+# NOTA: cargo-noun cloud/devops/sre NÃO entra em QUALIFICADORES_CARGO. Essa
+# lista alimenta `bate_ferramenta` (ferramenta no título + palavra de cargo
+# junto), que NÃO é gated por senioridade — só cabem palavras de papel IC
+# que não variam de júnior a sênior (desenvolvedor, programador). "devops"/
+# "cloud"/"sre" variam, então "DevOps Sênior - Kubernetes" ou "Engenheiro
+# DevOps AWS" passariam via ferramenta, furando os reject-cases.
 FERRAMENTAS_TITULO += [
     "Kubernetes",
     "K8s",

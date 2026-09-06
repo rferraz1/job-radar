@@ -212,6 +212,17 @@ def test_devops_sem_qualificador_junior_nao_passa():
     assert _vaga("Engenheiro DevOps").combina_com(PERFIL_BR.regras) is False
 
 
+def test_devops_senior_com_ferramenta_nao_passa():
+    # Ferramenta ("Kubernetes") no título NÃO pode abrir atalho: cargo-noun
+    # "devops" fica FORA de QUALIFICADORES_CARGO justamente pra bate_ferramenta
+    # (não gated por senioridade) não deixar vaga sênior passar.
+    assert _vaga("DevOps Sênior - Kubernetes").combina_com(PERFIL_BR.regras) is False
+
+
+def test_engenheiro_devops_com_aws_nao_passa():
+    assert _vaga("Engenheiro DevOps AWS").combina_com(PERFIL_BR.regras) is False
+
+
 # ---------------------------------------------------------------------------
 # Job.publicacao_antiga -- meses/anos = True, dias/semanas/vazio/absoluto
 # sem ano = False. Ver MEDIDO na property (job.py): vaga real da Sólides
