@@ -85,7 +85,7 @@ class Analysis:
 
     def resumo_curto(self) -> str:
         s = self.salary_estimate
-        sal = f"R$ {s.min}–{s.max}" if s.min and s.max else "salário n/d"
+        sal = f"R$ {s.min}–{s.max}" if s.min is not None and s.max is not None else "salário n/d"
         blk = sum(1 for g in self.gaps if g.severidade == "bloqueante")
         return f"{self.compat_score}% · {sal} · {blk} gap(s) bloqueante(s) · {self.verdict}"
 

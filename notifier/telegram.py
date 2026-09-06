@@ -1,4 +1,5 @@
 
+import html
 import json
 
 import requests
@@ -79,21 +80,27 @@ def _bloco_analise(analise) -> str:
     if analise is None:
         return ""
     s = analise.salary_estimate
-    linhas = [f"\n📊 <b>Compatibilidade: {analise.compat_score}%</b> — {analise.verdict}"]
+    # Todo texto de origem LLM/scraper é escapado — a mensagem vai com
+    # parse_mode=HTML e "pede <2 anos" ou "P&D" derrubariam o envio inteiro
+    # (Telegram 400 → vaga nunca salva → re-analisada todo ciclo). Só os
+    # <b>/<i> literais deste próprio código passam sem escape.
+    linhas = [f"\n📊 <b>Compatibilidade: {analise.compat_score}%</b> — {html.escape(analise.verdict)}"]
     if analise.compat_reasoning:
-        linhas.append(f"<i>{analise.compat_reasoning}</i>")
-    if s.min and s.max:
-        linhas.append(f"💰 R$ {s.min}–{s.max}/mês (confiança {s.confianca})")
+        linhas.append(f"<i>{html.escape(analise.compat_reasoning)}</i>")
+    if s.min is not None and s.max is not None:
+        linhas.append(f"💰 R$ {s.min}–{s.max}/mês (confiança {html.escape(s.confianca)})")
     elif s.base:
-        linhas.append(f"💰 salário n/d — {s.base}")
+        linhas.append(f"💰 salário n/d — {html.escape(s.base)}")
     bloqueantes = [g for g in analise.gaps if g.severidade == "bloqueante"]
     outros = [g for g in analise.gaps if g.severidade != "bloqueante"]
     if bloqueantes:
-        linhas.append("🚫 <b>Bloqueante:</b> " + "; ".join(g.requisito for g in bloqueantes))
+        linhas.append("🚫 <b>Bloqueante:</b> " + "; ".join(html.escape(g.requisito) for g in bloqueantes))
     if outros:
-        linhas.append("⚠️ Lacunas: " + "; ".join(g.requisito for g in outros[:4]))
+        linhas.append("⚠️ Lacunas: " + "; ".join(html.escape(g.requisito) for g in outros[:4]))
     if analise.strengths:
-        linhas.append("✅ " + "; ".join(analise.strengths[:3]))
+        linhas.append("✅ " + "; ".join(html.escape(x) for x in analise.strengths[:3]))
+    if analise.descricao_parcial:
+        linhas.append("ℹ️ análise a partir do resumo da vaga (descrição completa indisponível)")
     return "\n".join(linhas) + "\n"
 
 
@@ -142,8 +149,8 @@ def notificar_vaga(job) -> bool:
         f"{_linha_aviso_antiga(job)}"
         f"<b>Relevância:</b> {_linha_relevancia(job.relevancia)}\n"
         f"<b>Motivo:</b> {job.motivo}\n"
-        f"<b>Empresa:</b> {job.empresa}\n"
-        f"<b>Cargo:</b> {job.titulo}\n"
+        f"<b>Empresa:</b> {html.escape(job.empresa)}\n"
+        f"<b>Cargo:</b> {html.escape(job.titulo)}\n"
         f"<b>Nível:</b> {job.senioridade}\n"
         f"<b>Local:</b> {job.local}\n"
         f"{linha_modalidade}"
@@ -172,8 +179,8 @@ def notificar_vaga_exploratoria(job) -> bool:
         f"{_linha_aviso_antiga(job)}"
         f"<b>Relevância:</b> {_linha_relevancia(job.relevancia)}\n"
         f"<b>Motivo:</b> {job.motivo}\n"
-        f"<b>Empresa:</b> {job.empresa}\n"
-        f"<b>Cargo:</b> {job.titulo}\n"
+        f"<b>Empresa:</b> {html.escape(job.empresa)}\n"
+        f"<b>Cargo:</b> {html.escape(job.titulo)}\n"
         f"<b>Nível:</b> {job.senioridade}\n"
         f"<b>Local:</b> {job.local}\n"
         f"{linha_modalidade}"
@@ -205,7 +212,7 @@ def montar_digest(vagas: list[tuple], rotulo_perfil: str) -> list[str]:
         sufixo_compat = f" — <b>{compat_score}%</b>" if compat_score is not None else ""
         return (
             f'{"🧭" if exploratoria else "•"} {_linha_relevancia(relevancia or 0)} '
-            f'<a href="{link}">{titulo}</a> — {empresa}{sufixo_compat}'
+            f'<a href="{html.escape(link, quote=True)}">{html.escape(titulo)}</a> — {html.escape(empresa)}{sufixo_compat}'
         )
 
     linhas = [_linha_digest(vaga) for vaga in vagas]

@@ -42,14 +42,38 @@ def _novas_do_ciclo(vagas_filtradas: list) -> list:
     dentro deste mesmo ciclo. Scraper multi-termo faz extend sem dedup, então o
     mesmo job pode vir 2x — sem colapsar aqui, a análise LLM rodaria 2x e a
     notificação sairia duplicada."""
+    # Rastreia AS DUAS chaves de dedup (id = hash da URL, chave_secundaria =
+    # empresa|titulo normalizados). Só o id deixava passar duplicata do mesmo
+    # ciclo com URL diferente mas mesma empresa+título — regressão vs
+    # origin/main, onde o save-antes-do-próximo pegava isso via ja_vista.
     vistos_no_ciclo: set[str] = set()
     novas = []
     for v in vagas_filtradas:
-        if v.id in vistos_no_ciclo or ja_vista(v):
+        if (
+            v.id in vistos_no_ciclo
+            or v.chave_secundaria in vistos_no_ciclo
+            or ja_vista(v)
+        ):
             continue
         vistos_no_ciclo.add(v.id)
+        vistos_no_ciclo.add(v.chave_secundaria)
         novas.append(v)
     return novas
+
+
+_HINT_DEVOPS_TERMOS = (
+    "devops", "sre", "site reliability", "cloud engineer", "platform engineer",
+    "devsecops", "kubernetes", "terraform",
+)
+
+
+def _hint_da_vaga(job) -> str:
+    """Trilha da vaga pra orientar o prompt do LLM: 'platform-devops' quando o
+    título é claramente de infra/plataforma, senão 'dev'."""
+    titulo = (getattr(job, "titulo", "") or "").lower()
+    if any(termo in titulo for termo in _HINT_DEVOPS_TERMOS):
+        return "platform-devops"
+    return "dev"
 
 
 def _deve_notificar_imediato(vaga) -> bool:
@@ -298,7 +322,14 @@ def ciclo_de_busca(perfil: Perfil):
             # indisponível ou a análise falhar, vaga.analise fica None e o
             # routing cai no fallback heurístico por relevancia (ver
             # _deve_notificar_imediato).
-            analisar_vagas(vagas_novas, hint="dev")
+            try:
+                analisar_vagas(
+                    vagas_novas, perfil_chave=perfil.chave, hint_fn=_hint_da_vaga
+                )
+            except Exception as e:
+                logger.warning(
+                    f"[{perfil.nome}] análise LLM falhou no ciclo (...): {e}"
+                )
 
             novas_da_fonte = 0
             for vaga in vagas_novas:

@@ -46,6 +46,19 @@ def test_texto_curto_cai_no_fallback(monkeypatch):
     assert completo is False
 
 
+def test_linkedin_sem_descricao_nao_faz_http(monkeypatch):
+    # Spec §2: LinkedIn só via endpoint guest público — nunca GET direto em
+    # linkedin.com/jobs/view/... Sem descrição no card, analisa do card.
+    import enrich.fetch_detail as fd
+    monkeypatch.setattr(fd, "_get_html",
+                        lambda url: (_ for _ in ()).throw(AssertionError("_get_html não deveria ser chamado")))
+    j = _job(site="LinkedIn", link="https://www.linkedin.com/jobs/view/123")
+    j.descricao = ""
+    texto, completo = buscar_descricao(j)
+    assert completo is False
+    assert j.titulo in texto and j.empresa in texto
+
+
 def test_falha_cai_no_fallback_card(monkeypatch):
     import enrich.fetch_detail as fd
     monkeypatch.setattr(fd, "_get_html", lambda url: (_ for _ in ()).throw(ConnectionError()))

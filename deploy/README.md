@@ -5,6 +5,8 @@
 1. `cd ~/git/job-radar && python -m venv .venv && .venv/bin/pip install -r requirements.txt`
 2. `.venv/bin/python -m playwright install chromium`
 3. `cp .env.example .env` e preencher (`GEMINI_API_KEY`, `TELEGRAM_*`, `CV_PATH`).
+   `CV_PATH` **precisa ser caminho absoluto** (roda via launchd/systemd, sem working
+   dir garantido) — CV vazio/inacessível desliga a análise LLM do ciclo.
 4. `cp deploy/com.rodolfo.jobradar.plist ~/Library/LaunchAgents/`
    — ajustar `WorkingDirectory` e o path do python se o checkout não for `~/git/job-radar`.
 5. `launchctl load ~/Library/LaunchAgents/com.rodolfo.jobradar.plist`

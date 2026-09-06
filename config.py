@@ -351,7 +351,7 @@ CV_PATH = os.getenv(
     os.path.join(os.path.dirname(__file__), "..", "claude-context", "curriculo", "curriculo.html"),
 )
 # Boards públicos do Greenhouse a vigiar (slug da empresa em boards.greenhouse.io/<slug>).
-_GREENHOUSE_DEFAULT = "nubank,hotmart,loft,quintoandar,mercadolibre"
+_GREENHOUSE_DEFAULT = "quintoandar,c6bank,stone,ebanx,wildlifestudios"
 GREENHOUSE_BOARDS = [
     b.strip() for b in os.getenv("GREENHOUSE_BOARDS", _GREENHOUSE_DEFAULT).split(",") if b.strip()
 ]

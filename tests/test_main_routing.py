@@ -46,3 +46,28 @@ def test_novas_do_ciclo_colapsa_duplicata_intra_ciclo(monkeypatch):
     ids = [v.id for v in novas]
     assert ids.count(a.id) == 1
     assert c.id in ids
+
+
+def test_novas_do_ciclo_colapsa_por_chave_secundaria(monkeypatch):
+    # I2: mesma empresa+título, URLs (e portanto ids) diferentes → mesma
+    # chave_secundaria. O set de ids sozinho deixava passar; agora não.
+    monkeypatch.setattr(main, "ja_vista", lambda v: False)
+    a = Job(titulo="Dev Júnior", empresa="ACME", local="Remoto", link="http://x/a", site="S1")
+    b = Job(titulo="Dev Júnior", empresa="ACME", local="Remoto", link="http://y/b", site="S2")
+    c = Job(titulo="Outra", empresa="ACME", local="Remoto", link="http://z/c", site="S1")
+    assert a.id != b.id and a.chave_secundaria == b.chave_secundaria
+
+    novas = main._novas_do_ciclo([a, b, c])
+
+    assert len(novas) == 2
+    chaves = [v.chave_secundaria for v in novas]
+    assert chaves.count(a.chave_secundaria) == 1
+
+
+def test_hint_da_vaga():
+    assert main._hint_da_vaga(_job_titulo("DevOps Júnior")) == "platform-devops"
+    assert main._hint_da_vaga(_job_titulo("Desenvolvedor React")) == "dev"
+
+
+def _job_titulo(t):
+    return Job(titulo=t, empresa="E", local="Remoto", link=f"http://x/{t}", site="S")

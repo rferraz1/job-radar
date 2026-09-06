@@ -51,6 +51,11 @@ def buscar_descricao(job) -> tuple[str, bool]:
     ja = getattr(job, "descricao", "") or ""
     if ja.strip():
         return ja.strip(), True
+    # Spec §2: LinkedIn só via endpoint guest público, nenhuma exceção. O card
+    # não trouxe descrição e job.link aponta pra página não-guest
+    # (linkedin.com/jobs/view/...) — não busca, analisa a partir do card.
+    if getattr(job, "site", "") == "LinkedIn":
+        return _fallback_card(job), False
     try:
         html = _get_html(job.link)
         texto = _texto_limpo(html)
