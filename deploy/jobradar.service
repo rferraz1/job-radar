@@ -1,0 +1,11 @@
+# deploy/jobradar.service — VM. Usar com um timer (jobradar.timer) OU cron.
+# Não habilitar até a migração (ver README).
+[Unit]
+Description=JobRadar - um ciclo de busca
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/job-radar
+EnvironmentFile=/opt/job-radar/.env
+ExecStart=/opt/job-radar/.venv/bin/python main.py --perfil brasil --once

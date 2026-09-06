@@ -53,6 +53,7 @@ Vaga de alta relevância chega na hora, com motivo da aprovação, nível e link
 - [Arquitetura técnica](#%EF%B8%8F-arquitetura-técnica)
 - [Estrutura do repositório](#-estrutura-do-repositório)
 - [Como rodar](#-como-rodar)
+- [Deploy](#-deploy)
 - [Testes](#-testes)
 
 ---
@@ -115,6 +116,10 @@ Criar `.env` na raiz com `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` (via [@BotFat
 ```bash
 python main.py --perfil brasil internacional --once
 ```
+
+## 🚀 Deploy
+
+Instruções de deploy no Mac via launchd e migração para VM com systemd — veja [`deploy/README.md`](deploy/README.md).
 
 ## 🧪 Testes
 
