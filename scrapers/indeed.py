@@ -23,6 +23,15 @@ class IndeedScraper(BaseScraper):
     acessos automatizados repetidos, mesmo que o scraping funcione em testes
     manuais. Se começar a retornar 0 vagas de forma consistente, é provável
     bloqueio, não erro de seletor.
+
+    MEDIDO 06/09: exatamente esse cenário. Rodando local (IP residencial) o
+    scraper acha vaga normal (HTTP 200, ~16 cards por página); rodando no
+    GitHub Actions, TODO termo dá timeout no wait_for_selector — o Cloudflare
+    do Indeed barra o range de IP de datacenter do Actions. Não é seletor
+    quebrado (o `.job_seen_beacon` continua valendo local). Sem conserto
+    possível sem proxy residencial, que é evasão anti-bot e está fora de
+    escopo do projeto. Por isso a fonte foi rebaixada pra FREQUENCIA_BAIXA
+    em perfis.py — continua no código e rende quando rodado localmente.
     """
 
     def __init__(self, termos_busca: list[str]):

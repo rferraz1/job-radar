@@ -153,8 +153,14 @@ _REGRAS_BR_IBERIA = RegrasFiltro(
 _SCRAPERS_BR = [
     DefinicaoScraper(GupyScraper, FREQUENCIA_ALTA),        # ~2,6% de rendimento
     DefinicaoScraper(LinkedInScraper, FREQUENCIA_ALTA),     # ~8,5% — a melhor fonte de longe
-    DefinicaoScraper(SolidesScraper, FREQUENCIA_ALTA),      # ~1,1%
-    DefinicaoScraper(IndeedScraper, FREQUENCIA_ALTA),       # ~1,1%
+    DefinicaoScraper(SolidesScraper, FREQUENCIA_ALTA),      # ~1,1% — via API JSON desde 06/09 (site virou SPA)
+    # Indeed: MEDIDO 06/09 — funciona local (IP residencial) mas dá timeout
+    # em TODO termo rodando no GitHub Actions (IP de datacenter barrado pelo
+    # Cloudflare do Indeed). Sem conserto sem proxy residencial (evasão
+    # anti-bot, fora de escopo). Rebaixado pra BAIXA: roda 1x/dia em vez de
+    # todo ciclo, pra não gastar ~5min de timeout (13 termos x 25s) em toda
+    # execução. Ainda rende quando rodado localmente. Ver scrapers/indeed.py.
+    DefinicaoScraper(IndeedScraper, FREQUENCIA_BAIXA),      # ~1,1%, bloqueado em CI (rende só local)
     DefinicaoScraper(CathoScraper, FREQUENCIA_BAIXA),       # <1%, timeout frequente em headless
     DefinicaoScraper(GeekHunterScraper, FREQUENCIA_BAIXA),  # <1%
     DefinicaoScraper(Jobs99Scraper, FREQUENCIA_BAIXA),      # <1%, fonte confirmada funcionando
