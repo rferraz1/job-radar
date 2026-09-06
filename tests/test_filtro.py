@@ -177,6 +177,42 @@ def test_combina_com(nome, titulo, local, modalidade, perfil, esperado):
 
 
 # ---------------------------------------------------------------------------
+# Trilha cloud/devops (júnior) no perfil BR — DevOps/Cloud/Platform/SRE/
+# DevSecOps entram com a MESMA regra do dev: júnior/estágio no título passa;
+# sênior e termo ambíguo sem qualificador júnior não passam; cargo de
+# redes/infra tradicional fica fora do escopo dev-leaning.
+# ---------------------------------------------------------------------------
+
+def _vaga(titulo, local="Recife, PE", modalidade="Remoto"):
+    return Job(
+        titulo=titulo, empresa="X", local=local,
+        link=f"https://teste.invalido/{titulo}", site="S", modalidade=modalidade,
+    )
+
+
+def test_devops_junior_remoto_passa():
+    assert _vaga("DevOps Júnior").combina_com(PERFIL_BR.regras) is True
+
+
+def test_cloud_engineer_junior_passa():
+    assert _vaga("Cloud Engineer Júnior (AWS)").combina_com(PERFIL_BR.regras) is True
+
+
+def test_sre_senior_reprova():
+    assert _vaga("Site Reliability Engineer Sênior").combina_com(PERFIL_BR.regras) is False
+
+
+def test_analista_de_redes_fora_de_escopo():
+    assert _vaga("Analista de Redes e Infraestrutura").combina_com(PERFIL_BR.regras) is False
+
+
+def test_devops_sem_qualificador_junior_nao_passa():
+    # "DevOps" ambíguo sozinho, sem júnior/estágio no título -> não passa
+    # (mesma regra do dev).
+    assert _vaga("Engenheiro DevOps").combina_com(PERFIL_BR.regras) is False
+
+
+# ---------------------------------------------------------------------------
 # Job.publicacao_antiga -- meses/anos = True, dias/semanas/vazio/absoluto
 # sem ano = False. Ver MEDIDO na property (job.py): vaga real da Sólides
 # ("há 7 meses") no jobs.db motivou o campo.

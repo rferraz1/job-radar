@@ -96,6 +96,65 @@ QUALIFICADORES_CARGO = [
     "suporte",
 ]
 
+# --- Trilha cloud/devops (júnior), dev-leaning ---
+# DevOps Jr / Cloud Engineer Jr / Platform Engineer Jr / SRE (lado dev) /
+# DevSecOps entram com A MESMA mecânica do dev: título que já declara
+# júnior/estágio no próprio nome vira CARGO FORTE (basta bater no título);
+# o termo cru ("DevOps", "SRE", "Cloud Engineer"), que também nomeia vaga
+# pleno/sênior, é CARGO AMBÍGUO — só conta com um QUALIFICADORES_DADOS
+# (júnior/estágio/trainee) junto no título. Assim "Engenheiro DevOps" e
+# "Site Reliability Engineer Sênior" NÃO passam, mas "DevOps Júnior" sim.
+# Cargo de redes/infra tradicional ("Analista de Redes e Infraestrutura")
+# fica de fora de propósito — não é a trilha dev-leaning que o Rodolfo quer.
+KEYWORDS_CARGO_FORTE += [
+    "DevOps Júnior",
+    "DevOps Jr",
+    "Júnior DevOps",
+    "Cloud Engineer Júnior",
+    "Engenheiro de Cloud Júnior",
+    "Engenheiro Cloud Júnior",
+    "Platform Engineer Júnior",
+    "Engenheiro de Plataforma Júnior",
+    "SRE Júnior",
+    "Site Reliability Engineer Júnior",
+    "DevSecOps Júnior",
+    "Estágio DevOps",
+    "Estágio em Cloud",
+    "Estágio em DevOps",
+]
+
+KEYWORDS_CARGO_AMBIGUO += [
+    "DevOps",
+    "Cloud Engineer",
+    "Engenheiro de Cloud",
+    "Engenheiro Cloud",
+    "Platform Engineer",
+    "Engenheiro de Plataforma",
+    "SRE",
+    "Site Reliability",
+    "DevSecOps",
+]
+
+QUALIFICADORES_CARGO += [
+    "devops",
+    "cloud",
+    "sre",
+    "plataforma",
+    "platform",
+    "devsecops",
+]
+
+FERRAMENTAS_TITULO += [
+    "Kubernetes",
+    "K8s",
+    "Terraform",
+    "Docker",
+    "AWS",
+    "GCP",
+    "Azure",
+    "CI/CD",
+]
+
 KEYWORDS = KEYWORDS_CARGO_FORTE + KEYWORDS_CARGO_AMBIGUO
 
 # Termos de busca enviados a cada site. Ficam separados das KEYWORDS de
@@ -118,6 +177,14 @@ TERMOS_CARGO_EXTRA = [
     # não gerar falso positivo no filtro de título).
     "desenvolvedor junior",
     "programador junior",
+    # trilha cloud/devops — rede mais larga que a keyword exata
+    "devops junior",
+    "cloud engineer junior",
+    "platform engineer junior",
+    "sre junior",
+    "estagio devops",
+    "estagio cloud",
+    "devsecops junior",
 ]
 
 TERMOS_CARGO = sorted(set(k.lower() for k in KEYWORDS) | set(TERMOS_CARGO_EXTRA))
