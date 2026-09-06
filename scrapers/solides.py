@@ -121,10 +121,16 @@ class SolidesScraper(BaseScraper):
         # dedup por hash de link em Job.id).
         slug = (item.get("slug") or "").strip()
 
+        # Formato "Cidade, UF" (vírgula, não " - ") de propósito: é o formato
+        # que extrair_escopo_remoto() reconhece pra derivar o mercado de uma
+        # vaga remota — "Salvador, BA" resolve {"Brasil"} pela sigla de UF,
+        # "Salvador - BA" cai em "mercado estrangeiro não mapeado" e a vaga
+        # remota brasileira é barrada (ver _SIGLAS_UF_BRASIL em job.py). Sem
+        # isso, o scraper trazia 333 vagas e 0 passavam o filtro.
         cidade = ((item.get("city") or {}).get("name") or "").strip()
         uf = ((item.get("state") or {}).get("code") or "").strip()
         if cidade and uf:
-            local = f"{cidade} - {uf}"
+            local = f"{cidade}, {uf}"
         elif cidade or uf:
             local = cidade or uf
         else:

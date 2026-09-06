@@ -34,7 +34,10 @@ def test_vaga_completa_id_numerico():
     vaga = _scraper()._montar_vaga(item)
     assert vaga.titulo == "Auditor(a) de TI Júnior"
     assert vaga.empresa == "BAKER TILLY BRASIL"
-    assert vaga.local == "Porto Alegre - RS"
+    # "Cidade, UF" (vírgula) e não " - ": é o formato que
+    # extrair_escopo_remoto reconhece pra resolver mercado="Brasil" numa
+    # vaga remota — ver comentário em _montar_vaga.
+    assert vaga.local == "Porto Alegre, RS"
     assert vaga.modalidade == "Híbrido"
     assert vaga.publicado_em == "2026-09-04"
     assert vaga.site == "Solides"
