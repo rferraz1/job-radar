@@ -71,6 +71,32 @@ def _linha_relevancia(pontos: int) -> str:
     return "⭐" * cheias + "☆" * (5 - cheias) + f" ({pontos}/10)"
 
 
+def _bloco_analise(analise) -> str:
+    """Renderiza a análise da IA (enrich.models.Analysis) como bloco HTML
+    pronto pra concatenar no corpo da notificação. "" quando não houve
+    análise (analise is None) — a vaga então renderiza exatamente como
+    antes desta etapa, sem "None%" nem bloco vazio."""
+    if analise is None:
+        return ""
+    s = analise.salary_estimate
+    linhas = [f"\n📊 <b>Compatibilidade: {analise.compat_score}%</b> — {analise.verdict}"]
+    if analise.compat_reasoning:
+        linhas.append(f"<i>{analise.compat_reasoning}</i>")
+    if s.min and s.max:
+        linhas.append(f"💰 R$ {s.min}–{s.max}/mês (confiança {s.confianca})")
+    elif s.base:
+        linhas.append(f"💰 salário n/d — {s.base}")
+    bloqueantes = [g for g in analise.gaps if g.severidade == "bloqueante"]
+    outros = [g for g in analise.gaps if g.severidade != "bloqueante"]
+    if bloqueantes:
+        linhas.append("🚫 <b>Bloqueante:</b> " + "; ".join(g.requisito for g in bloqueantes))
+    if outros:
+        linhas.append("⚠️ Lacunas: " + "; ".join(g.requisito for g in outros[:4]))
+    if analise.strengths:
+        linhas.append("✅ " + "; ".join(analise.strengths[:3]))
+    return "\n".join(linhas) + "\n"
+
+
 def _teclado_feedback(job_id: str) -> dict:
     """Teclado inline 👍/👎 anexado à notificação — callback_data carrega a
     direção (1/0) e o id do Job (hash md5, 32 chars), separados por "|".
@@ -103,13 +129,14 @@ def _linha_aviso_antiga(job) -> str:
 
 
 def notificar_vaga(job) -> bool:
-    # TODO (Fase 3): incluir aqui a % de compatibilidade com o currículo,
-    # calculada por IA, quando essa etapa for implementada.
-    #
     # Linha de publicação só aparece quando a fonte expõe isso (nem toda
     # expõe — ver Job.publicado_em / extrair_data_publicacao em job.py).
     linha_publicacao = f"<b>Publicada:</b> {job.publicado_em}\n" if job.publicado_em else ""
     linha_modalidade = f"<b>Modalidade:</b> {job.modalidade}\n" if job.modalidade else ""
+    # Bloco da análise da IA (compat%, salário, lacunas, veredito) — "" quando
+    # a vaga não passou pela etapa de enrich (job.analise is None), aí a
+    # mensagem sai idêntica ao formato anterior.
+    bloco_analise = _bloco_analise(getattr(job, "analise", None))
     texto = (
         f"🚨 <b>Nova vaga encontrada!</b>\n\n"
         f"{_linha_aviso_antiga(job)}"
@@ -122,7 +149,8 @@ def notificar_vaga(job) -> bool:
         f"{linha_modalidade}"
         f"<b>Site:</b> {job.site}\n"
         f"{linha_publicacao}\n"
-        f"Encontrada agora\n\n"
+        f"Encontrada agora\n"
+        f"{bloco_analise}\n"
         f"<b>Link:</b>\n{job.link}"
     )
     return enviar_mensagem(texto, reply_markup=_teclado_feedback(job.id))
@@ -170,11 +198,17 @@ def montar_digest(vagas: list[tuple], rotulo_perfil: str) -> list[str]:
     ~93% do volume indo pro digest (ver LIMIAR_DIGEST_IMEDIATO em
     config.py), um dia cheio passa fácil dos 4096 caracteres do Telegram
     — quebra em partes numeradas em vez de estourar/truncar."""
-    linhas = [
-        f'{"🧭" if exploratoria else "•"} {_linha_relevancia(relevancia or 0)} '
-        f'<a href="{link}">{titulo}</a> — {empresa}'
-        for titulo, empresa, link, relevancia, exploratoria, _compat_score, _analise_json in vagas
-    ]
+    def _linha_digest(vaga) -> str:
+        titulo, empresa, link, relevancia, exploratoria, compat_score, _analise_json = vaga
+        # compat% (etapa enrich) entra como sufixo — a linha de relevância
+        # segue igual pra não mudar o formato das vagas sem análise.
+        sufixo_compat = f" — <b>{compat_score}%</b>" if compat_score is not None else ""
+        return (
+            f'{"🧭" if exploratoria else "•"} {_linha_relevancia(relevancia or 0)} '
+            f'<a href="{link}">{titulo}</a> — {empresa}{sufixo_compat}'
+        )
+
+    linhas = [_linha_digest(vaga) for vaga in vagas]
 
     partes: list[list[str]] = []
     parte_atual: list[str] = []
