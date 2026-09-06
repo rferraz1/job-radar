@@ -341,6 +341,11 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 # --- Análise profunda por LLM (estágio 2 do funil — ver docs/.../specs) ---
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+# Modelo Gemini. Default é o alias `gemini-flash-latest` (acompanha o Flash
+# estável atual — a API aposenta versões nomeadas: em 06/09 "gemini-2.5-flash"
+# virou "no longer available to new users"). Setar GEMINI_MODEL no .env só
+# pra fixar uma versão específica.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 # Compatibilidade (0-100) a partir da qual a vaga vira alerta IMEDIATO.
 # Diferente de LIMIAR_DIGEST_IMEDIATO (0-10, heurístico) — este é o score do LLM.
 LIMIAR_COMPAT_IMEDIATO = int(os.getenv("LIMIAR_COMPAT_IMEDIATO", 85))

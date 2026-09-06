@@ -6,7 +6,20 @@ from .base import LLMProvider, LLMIndisponivel, LLMRespostaInvalida
 
 logger = get_logger()
 
-_MODELO = "gemini-2.5-flash"
+# MEDIDO 06/09 (smoke test com key real): a API do Gemini aposenta versão
+# nomeada ("models/gemini-2.5-flash is no longer available to new users").
+# Default vira o alias `gemini-flash-latest`, que acompanha o Flash estável
+# atual sozinho — sem exigir mudança de código na próxima rotação. `.env`
+# (GEMINI_MODEL) sobrepõe pra fixar uma versão específica se necessário.
+_MODELO_FALLBACK = "gemini-flash-latest"
+
+
+def _modelo() -> str:
+    try:
+        from config import GEMINI_MODEL
+        return GEMINI_MODEL or _MODELO_FALLBACK
+    except Exception:
+        return _MODELO_FALLBACK
 
 
 def _extrair_json(texto: str) -> dict:
@@ -36,7 +49,7 @@ class GeminiProvider(LLMProvider):
         for tentativa in (1, 2):
             try:
                 resp = self._cliente.models.generate_content(
-                    model=_MODELO,
+                    model=_modelo(),
                     contents=prompt if tentativa == 1 else prompt + "\n\nATENÇÃO: responda SÓ o JSON, nada mais.",
                     config={"response_mime_type": "application/json", "temperature": 0.2},
                 )

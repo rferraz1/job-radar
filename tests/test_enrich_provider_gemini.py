@@ -76,6 +76,8 @@ def test_obter_provider_gemini_retorna_instancia(monkeypatch):
     assert isinstance(prov, GeminiProvider)
 
 
-def test_gemini_sem_api_key_levanta_indisponivel():
+def test_gemini_sem_api_key_levanta_indisponivel(monkeypatch):
+    # zera também o config: com um .env real (produção) GEMINI_API_KEY não é ""
+    monkeypatch.setattr("config.GEMINI_API_KEY", "", raising=False)
     with pytest.raises(LLMIndisponivel, match="(?i)key"):
         GeminiProvider(api_key="")
