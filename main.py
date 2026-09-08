@@ -498,6 +498,12 @@ def main():
         help="Roda um único ciclo de busca (de cada perfil selecionado) e encerra "
              "(usado no GitHub Actions, que já dispara o script periodicamente via cron).",
     )
+    parser.add_argument(
+        "--dashboard",
+        action="store_true",
+        help="Ao fim do ciclo, escreve o painel 'Vagas' e publica o dashboard.html "
+             "do monorepo ~/git/agentes (uso local via launchd; o CI não passa esta flag).",
+    )
     args = parser.parse_args()
 
     perfis_selecionados = [PERFIS[chave] for chave in args.perfil]
@@ -520,12 +526,23 @@ def main():
         enviar_mensagem(f"🛑 <b>JobRadar abortado</b>\n\nPerfis desta execução: {nomes}\n\n{e}")
         sys.exit(1)
 
+    def _publicar_dashboard():
+        if not args.dashboard:
+            return
+        try:
+            from notifier.dashboard_panel import publicar_painel
+            publicar_painel([p.chave for p in perfis_selecionados])
+        except Exception as e:  # nunca derruba o ciclo
+            logger.error(f"[dashboard] falha ao publicar: {type(e).__name__}: {e}")
+
     if args.once:
         _rodar_um_ciclo_de_cada(perfis_selecionados)
+        _publicar_dashboard()
         return
 
     while True:
         _rodar_um_ciclo_de_cada(perfis_selecionados)
+        _publicar_dashboard()
         logger.info(f"Aguardando {INTERVALO_MINUTOS} minutos até a próxima checagem...")
         time.sleep(INTERVALO_MINUTOS * 60)
 

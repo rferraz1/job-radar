@@ -10,6 +10,7 @@
     <string>main.py</string>
     <string>--perfil</string><string>brasil</string>
     <string>--once</string>
+    <string>--dashboard</string>
   </array>
   <key>StartCalendarInterval</key>
   <array>
