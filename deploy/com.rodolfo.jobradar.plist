@@ -23,6 +23,6 @@
   </array>
   <key>StandardOutPath</key><string>/tmp/jobradar.out.log</string>
   <key>StandardErrorPath</key><string>/tmp/jobradar.err.log</string>
-  <key>RunAtLoad</key><false/>
+  <key>RunAtLoad</key><true/>
 </dict>
 </plist>
