@@ -22,6 +22,7 @@ from database.database import (
     obter_vagas_pendentes_digest,
     salvar_vaga,
 )
+from notifier.alertas import avisar_falha
 from notifier.telegram import (
     enviar_digest,
     enviar_mensagem,
@@ -524,6 +525,7 @@ def main():
         logger.error(str(e))
         nomes = ", ".join(p.nome for p in perfis_selecionados)
         enviar_mensagem(f"🛑 <b>JobRadar abortado</b>\n\nPerfis desta execução: {nomes}\n\n{e}")
+        avisar_falha(f"abortado (banco suspeito) — perfis: {nomes} — {e}")
         sys.exit(1)
 
     def _publicar_dashboard():
@@ -531,9 +533,13 @@ def main():
             return
         try:
             from notifier.dashboard_panel import publicar_painel
-            publicar_painel([p.chave for p in perfis_selecionados])
+            ok = publicar_painel([p.chave for p in perfis_selecionados])
         except Exception as e:  # nunca derruba o ciclo
             logger.error(f"[dashboard] falha ao publicar: {type(e).__name__}: {e}")
+            avisar_falha(f"dashboard não publicou: {type(e).__name__}: {e}")
+            return
+        if not ok:
+            avisar_falha("dashboard não publicou (publicar_painel devolveu False — ver /tmp/jobradar.err.log)")
 
     if args.once:
         _rodar_um_ciclo_de_cada(perfis_selecionados)
