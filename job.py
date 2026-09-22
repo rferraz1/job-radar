@@ -797,6 +797,20 @@ class Job:
     # reflete). Mantém `local` preenchido pra exibir na notificação — só
     # tira ele da checagem de mercado.
     escopo_indefinido: bool = False
+    # ACHADO 21/09 (quase gerou candidatura errada — Voetur Viagens,
+    # Analista de Suporte Junior): o LinkedInScraper marca modalidade="Remoto"
+    # sempre que a vaga veio da passada com filtro nativo f_WT=2, confiando
+    # que o próprio LinkedIn classificou certo. Mas o f_WT=2 tem falso
+    # positivo — a vaga real dessa candidatura era **presencial em
+    # Brasília/DF**, badge só visível na página autenticada (o endpoint
+    # guest, usado pelo scraper, não expõe esse campo). Sem outra fonte pra
+    # confirmar, a saída não é "confiar cegamente" nem "descartar sempre" —
+    # é ser honesto sobre a incerteza. `False` = modalidade "Remoto" foi
+    # INFERIDA só pelo filtro de busca, não confirmada no anúncio (só
+    # LinkedInScraper seta isso; toda outra fonte deixa o default True —
+    # a modalidade delas vem de campo estruturado real, não de filtro
+    # de busca assumido como verdade).
+    modalidade_confirmada: bool = True
     # Score de pontuar_relevancia() (0-10), preenchido por filtrar_vagas()
     # depois que a vaga passa combina_com() — 0 até lá (nunca usado sozinho
     # pra decidir nada, só pra ORDENAR/destacar na notificação).

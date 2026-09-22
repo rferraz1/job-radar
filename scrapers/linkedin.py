@@ -151,9 +151,9 @@ class LinkedInScraper(BaseScraper):
                             local_el = card.query_selector(".job-search-card__location")
                             local = local_el.inner_text().strip() if local_el else "Não informado"
 
-                            # f_WT=2 já garante que é vaga remota (o próprio
-                            # LinkedIn classificou assim), mesmo quando o
-                            # campo local só mostra a cidade da empresa —
+                            # f_WT=2 geralmente garante que é vaga remota (o
+                            # próprio LinkedIn classificou assim), mesmo quando
+                            # o campo local só mostra a cidade da empresa —
                             # marca direto, sem precisar achar "remoto" no
                             # texto do local. f_WT=2 às vezes diverge do
                             # próprio anúncio (título diz "Hybrid") —
@@ -161,10 +161,24 @@ class LinkedInScraper(BaseScraper):
                             # fonte, não só aqui. Passada nacional: só marca
                             # se o próprio card organicamente disser isso no
                             # local.
+                            #
+                            # ACHADO 21/09: f_WT=2 também tem falso positivo
+                            # "silencioso" (não pega no título, só no badge da
+                            # página autenticada — ver Job.modalidade_confirmada).
+                            # Vaga real: Voetur Viagens/Analista de Suporte
+                            # Junior, veio com f_WT=2 e modalidade="Remoto",
+                            # era presencial em Brasília/DF. Sem forma de
+                            # confirmar via endpoint guest (testado: não expõe
+                            # esse campo) — marca a incerteza em vez de
+                            # assumir. `local` batendo com "remoto" de verdade
+                            # (raro, mas acontece) é a única confirmação
+                            # orgânica disponível.
                             if remoto:
                                 modalidade = "Remoto"
+                                modalidade_confirmada = _e_remoto(_normalizar(local))
                             else:
                                 modalidade = "Remoto" if _e_remoto(_normalizar(local)) else ""
+                                modalidade_confirmada = True
 
                             link_el = card.query_selector("a.base-card__full-link")
                             link = link_el.get_attribute("href") if link_el else None
@@ -182,6 +196,7 @@ class LinkedInScraper(BaseScraper):
                                 site="LinkedIn",
                                 publicado_em=publicado_em,
                                 modalidade=modalidade,
+                                modalidade_confirmada=modalidade_confirmada,
                             ))
                         except Exception as e:
                             logger.warning(f"[LinkedIn] Erro ao processar card: {e}")

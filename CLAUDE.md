@@ -42,6 +42,13 @@ sqlite3 data/jobs.db "SELECT titulo, link FROM vagas_vistas WHERE titulo LIKE '%
   `_intl` pro perfil internacional). Scrapers quebram de forma independente
   (bloqueio de anti-bot, mudança de DOM) — checar `data/jobs.db` (funil por
   fonte no log) antes de assumir que "não tem vaga nova" é sinal real.
+  **`linkedin.py`/`linkedin_intl.py`: `modalidade="Remoto"` vindo do filtro
+  `f_WT=2` NÃO é garantia** — tem falso positivo que só aparece na página
+  autenticada, não no endpoint guest usado pelo scraper (achado 21/09,
+  quase gerou candidatura numa vaga presencial em Brasília — ver
+  `agentes/INCIDENTES.md`). `Job.modalidade_confirmada=False` marca esses
+  casos; antes de recomendar/candidatar uma vaga do LinkedIn com essa flag
+  False, abrir o link de verdade e conferir a modalidade real.
 - **`database/database.py`** — SQLite (`data/jobs.db`), tabela
   `vagas_vistas` é a fonte de verdade de dedup entre ciclos.
 - **`enrich/analyze.py`** — pontuação de fit via LLM (Gemini) com fallback

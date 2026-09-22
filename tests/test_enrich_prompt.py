@@ -20,3 +20,17 @@ def test_prompt_tem_vaga_cv_e_schema():
 def test_cv_vazio_nao_quebra():
     p = montar_prompt(_job(), "desc", "", hint="dev")
     assert "sem cv" in p.lower() or "não informado" in p.lower()
+
+
+def test_modalidade_confirmada_nao_aparece_ressalva():
+    p = montar_prompt(_job(), "desc", "cv", hint="dev")
+    assert "Modalidade: Remoto\n" in p
+
+
+def test_modalidade_nao_confirmada_aparece_ressalva():
+    job = Job(titulo="Suporte Jr", empresa="X", local="Brasília, DF",
+               link="http://x/2", site="LinkedIn", modalidade="Remoto",
+               modalidade_confirmada=False)
+    p = montar_prompt(job, "desc", "cv", hint="dev")
+    assert "NÃO CONFIRMADA" in p
+    assert "Remoto (NÃO CONFIRMADA" in p

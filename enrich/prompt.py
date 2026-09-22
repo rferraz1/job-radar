@@ -18,6 +18,9 @@ Regras:
 - Gap BLOQUEANTE (inglês fluente obrigatório, "N+ anos de experiência", graduação completa
   exigida, senioridade sênior/especialista) derruba compat_score para faixa baixa (<40),
   não importa quão bem as skills batem.
+- Modalidade marcada "(NÃO CONFIRMADA)": foi inferida por um filtro de busca, não pelo
+  próprio anúncio — trate como gap BLOQUEANTE se o local for uma cidade específica fora do
+  mercado do candidato (não presuma que é remota de verdade).
 - salary_estimate: só preencha min/max com base real (faixa no anúncio, ou faixa típica
   clara do cargo+senioridade no Brasil). Sem base: min/max null, confianca "baixa".
 - verdict reflete o conjunto (score + gaps + coerência com a transição), não só o número.
@@ -28,11 +31,14 @@ Responda SOMENTE com um objeto JSON neste formato, sem texto antes ou depois:
 
 def montar_prompt(job, descricao: str, cv_text: str, hint: str = "dev") -> str:
     cv = cv_text.strip() or "(sem CV disponível — avalie só pelo título/senioridade da vaga)"
+    modalidade_txt = job.modalidade or "não informada"
+    if job.modalidade and not job.modalidade_confirmada:
+        modalidade_txt += " (NÃO CONFIRMADA — inferida por filtro de busca, não pelo anúncio)"
     return (
         _INSTRUCOES.format(hint=hint, schema=_SCHEMA)
         + "\n\n=== VAGA ===\n"
         + f"Título: {job.titulo}\nEmpresa: {job.empresa}\nLocal: {job.local}\n"
-        + f"Modalidade: {job.modalidade or 'não informada'}\n"
+        + f"Modalidade: {modalidade_txt}\n"
         + f"Senioridade (estimada do título): {job.senioridade}\n\n"
         + f"Descrição:\n{descricao.strip()[:8000]}\n\n"
         + "=== CANDIDATO (CV) ===\n"

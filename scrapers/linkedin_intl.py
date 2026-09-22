@@ -114,10 +114,16 @@ class LinkedInIntlScraper(BaseScraper):
                             # nacional: sem filtro nativo, só resta a detecção
                             # orgânica no texto (raramente bate, mas serve como
                             # fallback pro eixo Ibérico quando religado).
+                            # ACHADO 21/09 (ver mesmo comentário em
+                            # scrapers/linkedin.py): f_WT=2 tem falso positivo
+                            # não pego pelo título — Job.modalidade_confirmada
+                            # marca a incerteza em vez de confiar cego.
                             if remoto:
                                 modalidade = "Remoto"
+                                modalidade_confirmada = _e_remoto(_normalizar(local))
                             else:
                                 modalidade = "Remoto" if _e_remoto(_normalizar(local)) else ""
+                                modalidade_confirmada = True
 
                             link_el = card.query_selector("a.base-card__full-link")
                             link = link_el.get_attribute("href") if link_el else None
@@ -135,6 +141,7 @@ class LinkedInIntlScraper(BaseScraper):
                                 site="LinkedIn Internacional",
                                 publicado_em=publicado_em,
                                 modalidade=modalidade,
+                                modalidade_confirmada=modalidade_confirmada,
                             ))
                         except Exception as e:
                             logger.warning(f"[LinkedIn Intl] Erro ao processar card: {e}")
